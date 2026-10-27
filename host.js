@@ -7,7 +7,7 @@ import { promisify } from 'node:util'
 import { randomUUID } from 'node:crypto'
 
 export const name = 'stickers'
-export const inject = ['tools', 'webServer']
+export const inject = ['tools', 'webServer', 'connection']
 const HOME = process.env.DSH_HOME || join(homedir(), '.dsh')
 const CONFIG = join(HOME, 'stickers', 'config.json')
 const SELECTOR = fileURLToPath(new URL('./selector.py', import.meta.url))
@@ -84,12 +84,21 @@ export function apply(ctx) {
   }))
   ctx.effect(() => ctx.webServer.register({ kind: 'prefix', path: '/dsh-stickers', handler: async (req, res) => {
     try {
+      // Use the host's session/token authentication; no unauthenticated fallback.
+      const connection = ctx.get('connection')
+      const refused = typeof connection?.requestRejection === 'function' ? connection.requestRejection(req) : 403
+      if (refused !== undefined) return json(res, refused, { ok: false, error: refused === 401 ? '未登录' : '请求未授权' })
+      const site = req.headers['sec-fetch-site']
+      if (site !== undefined && site !== 'same-origin' && site !== 'none') return json(res, 403, { ok: false, error: '浏览器来源不允许' })
+      if (req.method === 'POST' && !/^application\/json\s*(;|$)/i.test(req.headers['content-type'] || '')) return json(res, 415, { ok: false, error: '请求必须使用 application/json' })
       const url = new URL(req.url, 'http://localhost')
       const path = url.pathname.slice('/dsh-stickers'.length)
       if (path === '/state' && ['GET', 'POST'].includes(req.method)) return json(res, 200, await state())
       if (path === '/config' && req.method === 'POST') {
         const body = await bodyOf(req)
-        if (Object.keys(body).some(key => !Object.hasOwn(defaults, key))) throw new Error('未知设置字段')
+        // Executable selection is local-admin configuration, never browser input.
+        if (Object.hasOwn(body, 'pythonPath')) throw new Error('Python 路径只能在本地配置文件中修改')
+        if (Object.keys(body).some(key => !['enabled', 'libraryPath'].includes(key))) throw new Error('未知设置字段')
         const config = validateConfig({ ...readConfig(), ...body })
         const stats = await runSelector(config, ['--stats'])
         mkdirSync(dirname(CONFIG), { recursive: true })

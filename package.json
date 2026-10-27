@@ -1,7 +1,7 @@
 {
   "name": "dsh-stickers",
-  "version": "0.1.4",
-  "description": "给 DSH 聊天配表情用的，按情绪随机挑图，支持 GIF、QQ 配图和分类预览。",
+  "version": "0.1.5",
+  "description": "大肥鱼表情包：按情绪等概率选图，支持人物筛选、GIF、QQ 回复与主动搭话配图、分类预览和素材统计。", 
   "license": "MIT",
   "author": "Akie-Star",
   "homepage": "https://github.com/Akie-Star/dsh-stickers#readme",

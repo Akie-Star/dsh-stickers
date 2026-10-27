@@ -2,27 +2,32 @@
 
 # 大肥鱼表情包
 
-给 DSH 聊天配表情用的，不用每次自己翻图、贴图。
+给 DeepSeek Harness 聊天配表情：按情绪随机挑图，支持 GIF、QQ 回复、主动搭话和分类预览。
 
-- **按情绪挑图**：先判断这句话是什么情绪，再从对应分类里随机挑一张。同类每张图机会一样，不偏人物，也不因为最近用过就排除。
-- **普通图片和 GIF 都支持**，不改原图，动图照样动。
-- **QQ 回复和主动搭话都能配图**，按一轮一张的规则来，文字分成几条也共用这一张。
-- **设置里能看素材数量和情绪分布**，四列表格不占太长一页；也能按情绪、人物筛选，点上一张、下一张慢慢翻。
-- **预览只看图，不发消息、不记使用记录**。聊天选好图后，交给现有 QQ 桥发送。
+## 功能
+
+- **按情绪随机选图**：开心、疑惑、困倦、招呼等情绪各选各的，同类图片等概率抽取。
+- **人物与素材组筛选**：默认使用全部素材，也能指定人物或素材组。
+- **图片与 GIF**：保留原图字节，动图直接预览和使用。
+- **QQ 聊天配图**：选图结果生成 Markdown，交给 QQ 桥随回复发送；支持普通回复和主动搭话，分条文字共享一张图。
+- **素材管理页**：查看素材总量、可用数量、情绪分布和人物分布，四列表格紧凑展示。
+- **分类预览**：按情绪、人物筛选，上一张和下一张循环浏览；单张素材自动禁用切换。
+- **独立选图记录**：聊天选图留存记录，预览与聊天记录分开处理。
+- **桌面与浏览器适配**：图片使用宿主相对地址，设置和预览接入 DSH 登录认证。
 
 ## 安装
 
-需要支持第三方插件的 DeepSeek Harness、Node.js 22+ 和 Python 3.10+。有 DSH 捆绑 Python 就直接用，不用再装依赖。插件本身没有 npm 或 Python 第三方依赖。
+运行环境：支持第三方插件及 `connection.requestRejection` 接口的 DeepSeek Harness、Node.js 22+、Python 3.10+。插件优先使用 DSH 捆绑 Python，全部使用 Node.js 与 Python 标准库。
 
 ```powershell
-dsh plugin --profile desktop add "https://codeload.github.com/Akie-Star/dsh-stickers/tar.gz/v0.1.4"
+dsh plugin --profile desktop add "https://codeload.github.com/Akie-Star/dsh-stickers/tar.gz/v0.1.5"
 ```
 
-也可以在 DSH 插件管理里使用上面的 GitHub 归档地址安装。安装或更新后，按宿主提示重启 DSH，再打开「设置 → 表情包」。后端没有热重载时，只刷新页面不够。
+也可以在 DSH 插件管理中填写归档地址安装。安装或更新后重启 DSH，打开「设置 → 表情包」。
 
-## 准备自己的表情库
+## 配置表情库
 
-**插件不自带表情图片，也不会自动给图片分类。** 图片放在你自己的文件夹，用 `CATALOG.json` 告诉插件每张图是什么情绪。可以从 [索引示例](examples/CATALOG.json) 开始，按自己的图片修改路径和分类：
+把自己的图片放进素材文件夹，并用 `CATALOG.json` 登记情绪、人物和相对路径。[索引示例](examples/CATALOG.json)可直接修改使用。
 
 ```text
 我的表情库/
@@ -42,37 +47,30 @@ dsh plugin --profile desktop add "https://codeload.github.com/Akie-Star/dsh-stic
 }
 ```
 
-在设置中填写：
+1. 在设置页填写素材库的绝对路径并保存。
+2. 选择情绪或人物，点击「仅预览」检查图片与分类数量。
+3. 开启插件，在聊天中使用选图工具。
 
-1. **素材库路径**：上面文件夹的绝对路径。
-2. **Python 路径**：现有 Python 可执行文件；插件会优先找 DSH 捆绑的 Python。
-3. 保存后点「仅预览」。能看到图片和分类数量，就可以用了。
+索引字段：`id` 为唯一编号，`label` 为图片名称，`category` 为情绪，`collection` 为人物或素材组，`relativePath` 为素材库内的相对路径。可选字段还有 `emotion/tags/use/url`。缺失图片自动跳过。
 
-`id` 要唯一，`relativePath` 相对素材库且不能指向库外。`label` 是名字，`category` 是情绪，`collection` 是人物或素材组；还可选填 `emotion/tags/use/url`。缺失图片会跳过，原图和 GIF 不会改动。
+## 聊天配图
 
-## 聊天怎么配图
+- `sticker_pick({"emotion":"疑惑"})`：按情绪等概率选图，成功返回图片 Markdown。
+- `sticker_pick({"emotion":"开心","collection":"我的表情"})`：指定素材组。
+- `sticker_status()`：查看开关、素材数量和分类分布。
 
-插件提供两个工具：
+在需要配图的会话中加入规则：
 
-- `sticker_pick({"emotion":"疑惑"})`：从该情绪中等概率挑一张，成功只返回 `markdown`。
-- `sticker_status()`：按需查开关、素材数量和情绪分布，不需要每轮先查。
+> QQ 普通回复和主动搭话每轮配一张表情，分条文字共享一张，静默轮次跳过。先判断情绪，调用 sticker_pick，将返回的 Markdown 原样放在最终正文末尾，与文字空一行。有 [QQ] 块时，图片也放在块内，由 QQ 桥发送。
 
-默认不限制人物；只有用户明确点名时才传 `collection`。无匹配时换相近情绪，关闭插件时不能绕过开关去调用脚本。
+每轮配图规则由会话执行。首次预览随机选图，上一张和下一张按筛选结果顺序循环；切换分类清空旧预览，导航出错保留当前图片，方便重试。
 
-给需要配图的会话加上这段规则即可：
+## 本地配置
 
-> QQ 普通回复和主动搭话每个实际回复轮次配一张表情，分条文字共享一张，静默不发图。先判断情绪，调用 sticker_pick，把实际返回的 markdown 原样放在最终正文末尾，前面空一行。有 [QQ] 块时，图片也放在块内。不要解释选图过程，不另行发送，由 QQ 桥处理。
-
-每轮一张由工具说明和会话规则落实，插件不会在模型漏图时强制补图。它只负责选图，不改 QQ 登录、绑定或群权限，也不会把普通 DSH 回复自动当成 QQ 消息发送。
-
-## 预览与记录
-
-- 首次预览等概率选图，上一张/下一张按当前筛选结果的稳定顺序循环；只有一张时禁用切换。
-- 修改情绪或人物筛选会清空旧预览；导航失败保留旧图，方便重试。
-- 预览不发送 QQ，不写选图记录。聊天选图记录只作留痕，不改变下次概率，也不是 QQ 投递回执。
-- 配置位于 `$DSH_HOME/stickers/config.json`，仅含 `enabled/libraryPath/pythonPath`。
-- 选择记录位于 `$DSH_HOME/feiyu-chat/sticker-usage.json`；目录名沿用本插件最初的兼容入口。
-- 桌面版和浏览器共用宿主相对图片地址，不要求桌面页面是 HTTP(S) 协议。
+- 插件配置：`$DSH_HOME/stickers/config.json`，字段为 `enabled/libraryPath/pythonPath`。
+- 设置页可修改开关与素材库路径，Python 路径以只读方式展示。
+- 自定义 Python：在本地配置中将 `pythonPath` 设为 Python 可执行程序的绝对路径。
+- 选图记录：`$DSH_HOME/feiyu-chat/sticker-usage.json`。
 
 ## 开发与检查
 
@@ -81,6 +79,6 @@ node test.mjs
 node test-client.mjs
 ```
 
-测试用临时图片、模拟工具宿主和设置页，不会发送真实 QQ 消息。可用 `STICKER_TEST_PYTHON` 指定测试 Python。宿主代码、前端注册脚本和 Python 选择器都是直接可用的源码，不需要额外构建。
+可通过 `STICKER_TEST_PYTHON` 指定测试 Python。宿主代码、前端脚本和 Python 选择器直接运行。
 
-本仓库只包含插件、示例索引、图标和测试，不包含用户表情图片、账号配置或聊天记录。代码与图标采用 [MIT License](LICENSE)。
+代码与图标采用 [MIT License](LICENSE)。

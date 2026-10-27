@@ -86,7 +86,7 @@ window.__ModuleLoader__.load({
               throw new Error('接口返回的状态不完整。')
             }
             setState(data)
-            setDraft({ enabled: data.config.enabled, libraryPath: data.config.libraryPath, pythonPath: data.config.pythonPath })
+            setDraft({ enabled: data.config.enabled, libraryPath: data.config.libraryPath })
             const emotions = Object.keys((data.stats && data.stats.emotions) || {})
             const collections = Object.keys((data.stats && data.stats.collections) || {})
             setEmotion((old) => emotions.includes(old) ? old : (emotions[0] || ''))
@@ -112,7 +112,7 @@ window.__ModuleLoader__.load({
       }, [run])
 
       const dirty = !!(state && draft && (
-        draft.enabled !== state.config.enabled || draft.libraryPath !== state.config.libraryPath || draft.pythonPath !== state.config.pythonPath
+        draft.enabled !== state.config.enabled || draft.libraryPath !== state.config.libraryPath
       ))
       const button = (text, onClick, disabled) => h('button', {
         type: 'button', style: S.control, onClick, disabled: !!busy || disabled,
@@ -185,7 +185,8 @@ window.__ModuleLoader__.load({
             h('label', { style: S.field }, '素材库路径',
               h('input', { type: 'text', style: S.control, value: draft.libraryPath, onChange: (e) => edit('libraryPath', e.target.value) })),
             h('label', { style: S.field }, 'Python 路径',
-              h('input', { type: 'text', style: S.control, value: draft.pythonPath, onChange: (e) => edit('pythonPath', e.target.value) })),
+              h('input', { type: 'text', style: S.control, value: state.config.pythonPath, readOnly: true })),
+            h('p', { style: S.hint }, 'Python 路径仅供查看。如需修改，请在本机编辑 $DSH_HOME/stickers/config.json；网页不能设置可执行程序。'),
           ),
         ) : null,
       )
