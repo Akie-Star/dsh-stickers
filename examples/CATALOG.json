@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "id": "happy-001",
+      "label": "开心",
+      "category": "开心",
+      "collection": "我的表情",
+      "relativePath": "开心/笑.png"
+    },
+    {
+      "id": "question-001",
+      "label": "疑惑",
+      "category": "疑惑",
+      "collection": "我的表情",
+      "relativePath": "疑惑/问号.gif"
+    }
+  ]
+}

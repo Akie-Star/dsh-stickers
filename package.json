@@ -1,0 +1,19 @@
+{
+  "name": "dsh-stickers",
+  "version": "0.1.4",
+  "description": "给 DSH 聊天配表情用的，按情绪随机挑图，支持 GIF、QQ 配图和分类预览。",
+  "license": "MIT",
+  "author": "Akie-Star",
+  "homepage": "https://github.com/Akie-Star/dsh-stickers#readme",
+  "repository": { "type": "git", "url": "git+https://github.com/Akie-Star/dsh-stickers.git" },
+  "bugs": { "url": "https://github.com/Akie-Star/dsh-stickers/issues" },
+  "keywords": ["deepseek-harness", "dsh-plugin", "stickers", "qq", "表情包", "大肥鱼"],
+  "icon": "assets/icon.png",
+  "engines": { "node": ">=22" },
+  "type": "module",
+  "main": "host.js",
+  "exports": { ".": "./host.js", "./client": "./client.js", "./icon": "./assets/icon.png", "./cordis.patch.yml": "./cordis.patch.yml", "./package.json": "./package.json" },
+  "files": ["host.js", "client.js", "selector.py", "assets", "examples", "cordis.patch.yml", "README.md", "LICENSE", "test.mjs", "test-client.mjs"],
+  "scripts": { "test": "node test.mjs && node test-client.mjs" },
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" }, "client": { "platform": "web", "inject": ["slots"], "external": ["react"] } }
+}
